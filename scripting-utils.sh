@@ -26,3 +26,29 @@ ensure_min_bash_version() {
              ${BASH_VERSINFO[1]} -lt ${semver[1]:-0} ||
              ${BASH_VERSINFO[2]} -lt ${semver[2]:-0} ]]
 }
+
+#
+# FUNCTION QUERIES and TRANSFORMS
+#
+
+fn_to_sh_syntax() {
+    # Given a zsh-style or bash-style function definition, emit
+    # an sh-style companion. I prefer to keep the opening brace
+    # on the same line as the fn name and the body+closing braces
+    # on the following lines, for cleaner regex-matching of fn
+    # definitions. e.g.
+    #
+    #     'function foo3_bar() {' --> 'foo3_bar() {'
+    #     'function foo3_bar {'   --> 'foo3_bar() {'
+    #
+    sed -E 's;(function)\s+(\w+)(\(\))?+\s+\{;\2() \{;' ;
+}
+
+fn_ls() {
+    # List out names of functions found in the given files,
+    # assuming well-formed function definitions, written as:
+    #
+    #     'foo3_bar() {'
+    #
+    grep -E -o "^(\w+)\(\)\s+\{" "$@" | tr -d '(){'
+}
