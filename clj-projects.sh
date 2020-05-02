@@ -53,3 +53,17 @@ clj_kondo_install() {
         printf "%s\n" "clj-kondo is already at the latest version: ${executable_version}"
     fi
 }
+
+clj_project_qmark() {
+    # USAGE:
+    #
+    #     ls_git_projects /path/to/repos/ | clj_project_qmark
+    #
+
+    while read _wd
+    do
+        if [[ -f "${_wd}/project.clj" || -f "${_wd}/deps.edn" || -f "${_wd}/build.boot" ]]
+        then printf "%s\n" "${_wd}"
+        fi
+    done
+}
