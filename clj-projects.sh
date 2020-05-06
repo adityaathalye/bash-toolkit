@@ -72,7 +72,7 @@ clj_project_classpath() {
     local _wd="${1:-$(pwd)}"
 
     __err() {
-        1>&2 printf "%s\n" "Could not get classpath with ${1}"
+        (1>&2 printf "%s\n" "Could not get classpath with ${1}")
         return 1
     }
 
@@ -94,15 +94,16 @@ clj_kondo_init() {
     #
     #     ls_git_projects /path/to/repos/ | clj_project_qmark | clj_kondo_init
     #
-    # Init current dir, assuming at root of clojure project.
+    # Init the given dirs, assuming they are clj / cljs projects.
+    # Expects stream of fully qualified paths as input.
     # ref: https://github.com/borkdude/clj-kondo/blob/master/README.md#project-setup
     set -o pipefail
 
     while read _wd
     do local _classpath="$(clj_project_classpath ${_wd})"
-       if [[ -n ${_classpath} ]]
-       then 1>&2 printf "%s\n" "About to init clj-kondo for ${_wd}"
-            mkdir -p ".clj-kondo"
+       if [[ -n "${_classpath}" ]]
+       then (1>&2 printf "%s\n" "About to init clj-kondo for ${_wd}")
+            mkdir -p "${_wd}/.clj-kondo"
             (cd ${_wd}; clj-kondo --lint "${_classpath}") | grep "linting took"
        fi
     done
