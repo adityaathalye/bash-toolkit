@@ -59,3 +59,71 @@ window_from_to_lines() {
         head -n "${to_line}"
 }
 
+
+# ####################
+# PURE FUNCTIONS: SINGLE and MULTI-LINE STRUCTURED RECORDS
+# - filter, format, transform single or multi-line log streams
+# - these must consume stdin and write to stdout/err, and/or
+# - never cause side-effects (explicit file I/O etc.)
+# ####################
+
+logs_extract_records() {
+    # Usage: cat ./logfile.log | extract_log_records | wc -l
+    # or replace by awk if the pipeline gets too deep
+    grep -E -v "REJECT_LINES_PATTERN" \
+        | grep -E "CHOOSE_LINES_PATTERN"
+}
+
+logs_multiline_as_paras() {
+    # Applications often print logs in multiple lines, and we face
+    # walls of text.
+    #
+    # Given a wall of text of structured records, break the wall into
+    # newline-separated paragraphs, for visual and structural separation.
+    # Identify the beginning line, print a newline above it. Print
+    # subsequent lines as-is, till the next paragraph begins.
+
+    sed -n -E \
+        -e 's;^(FIXME_PARA_START_PATTERN).*;\n\0;p' \
+        -e 's;^([[:alnum:]]+.*);\0;p'
+}
+
+logs_paras_to_oneline() {
+    # Given any paragraph-style multi-line record set, transform each
+    # paragraph into single-line records.
+    #
+    # Ensure round trip from collapse -> expand -> collapse by using a
+    # unique marker (like "^Z") to annotate the _beginning_ of each
+    # line of a paragraph. (Ref. Classic Shell Scripting).
+
+    awk 'BEGIN { RS = "" } { gsub("\n","^Z"); print; }'
+}
+
+logs_oneline_to_paras() {
+    # Given a collapsed one-line record, expand it back to multi-line form.
+    # BUT preserve the "paragraph separation", to help re-processing.
+
+    awk 'BEGIN { ORS="\n\n"; } { gsub("\\^Z", "\n"); print; }'
+}
+
+logs_group_by_YYYY() {
+    # Given a list of records of this structure:
+    # INFO YYYYMMDDHHSS "Foobar important information"
+
+    sort -b -k2.1,2.4 # Ignore leading blanks, for correct character indexing
+}
+
+logs_group_by_MM() {
+    # Given a list of records of this structure:
+    # INFO YYYYMMDDHHSS "Foobar important information"
+
+    sort -b -k2.5,2.6
+}
+
+logs_group_by_MM_then_YYYY() {
+    # Given a list of records of this structure:
+    # INFO YYYYMMDDHHSS "Foobar important information"
+
+    sort -b -k2.5,2.6 -k2.1,2.4
+}
+
