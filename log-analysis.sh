@@ -179,3 +179,35 @@ csv_prepend_colnames() {
 }
 
 
+# ####################
+# PURE FUNCTIONS: JSON RECORDS
+# - these must consume stdin and write to stdout/err, and/or
+# - never cause side-effects (explicit file I/O etc.)
+# ####################
+
+
+jq_with_defaults() {
+    # Wraps jq with defaults for the purpose of this program.
+    # Expects to be passed a well-formed jq query as argument.
+    #
+    # Defaults provided:
+    #
+    # - Output with no colour, to avoid breaking tools that can't process colours
+    # - Output as a single line, to preserve compatibility with unix tools
+    jq -M -c "$@"
+}
+
+
+json_drop_uris() {
+    # Given uri prefix path, and csv list of routes under the path, drop any
+    # JSON log line that contains the path in its 'uri' field. Also drop any
+    # JSON having null 'uri' value.
+
+    local uri_prefix="${1:?(log_error 'Path of URI to drop required')}"
+    local uri_routes="${2:?(log_error 'List of routes to drop (as nested under URI) required')}"
+    local uri_routes_jq_pattern="$(printf "" "${uri_routes}" | tr ',' '\|')"
+
+    log_info "Dropping irrelevant or empty uris."
+    jq_with_defaults --arg ROUTES_REGEX "^/${uri_prefix}/${uri_routes_jq_pattern}.*" '. |
+    select((."uri" == null) or ((."uri" | strings) | test($ROUTES_REGEX) | not))'
+}
