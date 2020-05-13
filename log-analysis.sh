@@ -127,3 +127,55 @@ logs_group_by_MM_then_YYYY() {
     sort -b -k2.5,2.6 -k2.1,2.4
 }
 
+# ####################
+# PURE FUNCTIONS: CSV RECORDS
+# - make and select CSV records, one-per line, which
+#   may or may not have header and footer
+# - these must consume stdin and write to stdout/err, and/or
+# - never cause side-effects (explicit file I/O etc.)
+# ####################
+
+csv_from_http_error_logs() {
+    # Example for generating CSV data stream, assuming log files are
+    # space-separated records.
+    #
+    # Usage: cat ./logfile.log | http_errors_to_csv > outfile.csv
+    #
+    # Suppose our log has the following format:
+    #
+    # Field Name   : Position in log line
+    # timestamp    : 1
+    # http method  : 2
+    # http status  : 3
+    # aws trace id : 5
+    # customer ID  : 6
+    # uri          : 7
+    #
+    # Once generated, the CSV (outfile.csv) may be further analyzed as follows:
+    #
+    # - Make frequency distribution of HTTP_status, found in column 2 of outfile
+    #
+    # $ cat outfile.csv \
+        #   | awk 'BEGIN { FS="," } { print $2 }' \
+        #   | drop_csv_header \
+        #   | deduplicate \
+        #   | frequencies
+    #
+
+    awk 'BEGIN { FS = "[[:space:]]+"; OFS = ","; print "Timestamp,HTTP_status,HTTP_method,URI,Customer_ID,AWS_Trace_ID"}
+         /(GET|POST|PUT)[[:space:]]+(4|5)[[:digit:]][[:digit:]][[:space:]].*/ { sub(/^(\/common\/uri\/prefix\/)/, "", $7);
+                                        print $1,$3,$2,$7,$6,$5;
+                                        records_matched+=1; }'
+}
+
+csv_get_col() {
+    local idx="${1}"
+    cut -d , -f ${idx}
+}
+
+csv_prepend_colnames() {
+    local colnames="${@}"
+    cat <(printf "%s\t" ${colnames} printf "\n" ) -
+}
+
+
