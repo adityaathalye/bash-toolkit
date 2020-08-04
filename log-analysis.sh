@@ -20,7 +20,17 @@ ensure_deps "gawk" "jq"
 # ####################
 
 deduplicate() {
-    sort | uniq
+    # Ref. technique as seen here: https://stackoverflow.com/a/20639730
+    # Or use awk '!x[$0]++', as seen here https://stackoverflow.com/a/11532197
+
+    # print stdin stream with line-number prefixed
+    cat -n |
+        # sort uniquely by second key (the incoming lines)
+        sort -uk2 |
+        # sort numeric by first key (line number)
+        sort -nk1 |
+        # select second field to the end
+        cut -f2-
 }
 
 frequencies() {
