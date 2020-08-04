@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 
 #
+# PATH MANAGEMENT
+#
+
+make_clean_PATH() {
+    local my_path=${@:-"${PATH}"}
+
+    printf "%s\n" ${my_path} |
+        # un-form PATH-like strings
+        tr ':' '\n' |
+        # De-duplicate. # ref: https://stackoverflow.com/a/20639730
+        # Or use awk '!x[$0]++', as explained here https://stackoverflow.com/a/11532197
+        cat -n | sort -uk2 | sort -nk1 | cut -f2- |
+        # re-form lines into single-colon-separated PATH-like string
+        tr '\n' ':' | tr -s ':' |
+        # ensure no trailing colons
+        sed 's/:$//g'
+}
+
+
 # DEPENDENCY CHECKS
 #
 
