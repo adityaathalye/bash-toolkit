@@ -6,7 +6,8 @@
 #
 
 apt_install_standard_packages() {
-    local apt_packages="curl
+    local apt_packages="chromium-browser
+curl
 emacs26
 ffmpeg
 flatpak
@@ -45,8 +46,19 @@ __apt_install_custom_nextdns() {
     fi
 }
 
-apt_install_custom_packages() {
+__dpkg_install_chrome() {
+    if ! which google-chrome > /dev/null
+    then curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+              -o "$HOME/Downloads/google-chrome-stable_current_amd64.deb"
+         sudo dpkg -i "$HOME/Downloads/google-chrome-stable_current_amd64.deb"
+         sudo apt-get -f install
+    fi
+}
+
+sudo_install_from_walled_gardens() {
     __apt_install_custom_nextdns
+    __dpkg_install_chrome
+
     sudo apt autoremove
     sudo apt autoclean
 }
@@ -125,32 +137,30 @@ EOF
 #
 
 __install_to_HOME_bin_youtube_dl() {
-    curl -L https://yt-dl.org/downloads/latest/youtube-dl -o "${HOME}/bin/youtube-dl"
-    chmod u+x "${HOME}/bin/youtube-dl"
+    if ! which youtube-dl > /dev/null
+    then curl -L https://yt-dl.org/downloads/latest/youtube-dl -o "${HOME}/bin/youtube-dl"
+         chmod u+x "${HOME}/bin/youtube-dl"
+    fi
 }
 
 __install_to_HOME_bin_clojure_things() {
     # leiningen
-    curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -o "$HOME/bin/lein"
-    chmod u+x "$HOME/bin/lein"
-    "$HOME/bin/lein"
-
+    if ! which lein > /dev/null
+    then curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -o "$HOME/bin/lein"
+         chmod u+x "$HOME/bin/lein"
+         "$HOME/bin/lein"
+    fi
     # clj-kondo
     ( source ./clj-projects.sh
       clj_kondo_install )
 }
 
 __install_to_HOME_bin_and_local_python_things() {
-    # get pip
-    # https://pip.pypa.io/en/stable/installing/
-    # curl https://bootstrap.pypa.io/get-pip.py -o "./get-pip.py"
-    # python3 get-pip.py
-
     # get pipenv, virtualenv, and virtualenvwrapper
     # https://docs.python-guide.org/dev/virtualenvs/#
-    pip3 install --user pipenv
-    pip3 install virtualenv
-    pip3 install virtualenvwrapper
+    which pipenv || pip3 install --user pipenv
+    which virtualenv || pip3 install virtualenv
+    which virtualenvwrapper.sh || pip3 install virtualenvwrapper
 }
 
 install_to_HOME_bin() {
@@ -166,8 +176,10 @@ install_to_HOME_bin() {
 #
 
 __configure_java_default_as_openjdk_11() {
-    sudo update-java-alternatives \
-        --set "$(update-java-alternatives --list | awk '/java-1.11.*-amd64/ { print $1 }')"
+    if ! java --version | grep -q "openjdk 11"
+    then sudo update-java-alternatives \
+              --set "$(update-java-alternatives --list | awk '/java-1.11.*-amd64/ { print $1 }')"
+    fi
 }
 
 configure_things() {
@@ -184,7 +196,8 @@ configure_things() {
 #
 
 apt_install_standard_packages
-apt_install_custom_packages
+
+sudo_install_from_walled_gardens
 
 install_to_HOME_bin
 
