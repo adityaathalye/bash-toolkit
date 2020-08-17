@@ -6,36 +6,37 @@
 #
 
 apt_install_standard_packages() {
-    local apt_packages="chromium-browser
-curl
-emacs26
-ffmpeg
-flatpak
-gawk
-git
-gnome-tweak-tool
-gparted
-jq
-kazam
-openjdk-8-jdk
-openjdk-11-jdk
-openjdk-14-jdk
-postgresql
-python3
-python3-pip
-python3-venv
-rlwrap
-silversearcher-ag
-tmux
-vim"
+    declare -A installed_name_to_apt_package_array=(
+        [chromium]="chromium-browser"
+        [curl]="curl"
+        [emacs26]="emacs26"
+        [ffmpeg]="ffmpeg"
+        [flatpak]="flatpak"
+        [gawk]="gawk"
+        [git]="git"
+        [gnome-tweaks]="gnome-tweak-tool"
+        [gparted]="gparted"
+        [jq]="jq"
+        [kazam]="kazam"
+        [java]="openjdk-8-jdk openjdk-11-jdk openjdk-14-jdk"
+        [psql]="postgresql"
+        [python3]="python3"
+        [pip3]="python3-pip"
+        [rlwrap]="rlwrap"
+        [ag]="silversearcher-ag"
+        [tmux]="tmux"
+        [vim]="vim"
+    )
+
     sudo add-apt-repository universe
     sudo add-apt-repository multiverse
     sudo add-apt-repository -y ppa:kelleyk/emacs
     sudo apt-get update
 
-    for package in ${apt_packages}
-    do if ! which ${package} > /dev/null
-       then sudo apt-get install -y ${package}
+    for package in "${!installed_name_to_apt_package_array[@]}"
+    do if which ${package} > /dev/null
+       then printf "Skipping %s \n" ${package}
+       else sudo apt-get install -y "${installed_name_to_apt_package_array[${package}]}"
        fi
     done
 }
@@ -75,23 +76,22 @@ flatpak_install_packages_repo_with_restart() {
     # - Trigger restart iff first-time configuration.
     local remote_name="flathub"
     if flatpak remotes --columns=name | grep -q "${remote_name}"
-    then printf "INFO: About to install packages from %s\n" "${remote_name}"
-    else printf "INFO: About to add remote with name %s, and RESTART!\n" "${remote_name}"
+    then printf "INFO: About to install packages from %s.\n" "${remote_name}"
+    else printf "INFO: About to add remote with name %s.\n" "${remote_name}"
          flatpak remote-add --if-not-exists \
                  "${remote_name}" \
                  "https://flathub.org/repo/flathub.flatpakrepo"
-         shutdown -r
     fi
 }
 
 flatpak_install_packages() {
     local flatpak_aliases_file="$HOME/.bash_aliases_flatpak"
+
     declare -A app_alias_to_app_ID_array=(
         [bitwarden]="com.bitwarden.desktop"
         [bookworm]="com.github.babluboy.bookworm"
         [dropbox]="com.dropbox.Client"
         [gimp]="org.gimp.GIMP"
-        [gnome-font-viewer]="org.gnome.font-viewer"
         [inkscape]="org.inkscape.Inkscape"
         [keepassx]="org.keepassxc.KeePassXC"
         [postman]="com.getpostman.Postman"
@@ -107,18 +107,21 @@ flatpak_install_packages() {
     __ensure_distinct() { tr -s '\n' | sort | uniq ; }
 
     # set up to update bash aliases file, for flatpak apps
-    touch "${flatpak_aliases_file}"
+    touch -m "${flatpak_aliases_file}"
+    cat /dev/null > "${flatpak_aliases_file}.tmp"
+
     cat "${flatpak_aliases_file}" |
-        __ensure_distinct > "${flatpak_aliases_file}.tmp"
+        __ensure_distinct |
+        tee "${flatpak_aliases_file}.tmp" > /dev/null
 
     # check app alias, and flatpak install if not already apt installed
     for app_alias in "${!app_alias_to_app_ID_array[@]}"
-    do  if which ${app_alias} > /dev/null
-        then printf "Skipping flatpak install of ${app_alias}, because %s.\n" \
-                    "$(type -a ${app_alias})"
-        else echo "${app_alias_to_app_ID_array[${app_alias}]}"
-             flatpak install -y flathub "${app_alias_to_app_ID_array[${app_alias}]}"
-             cat >> "${flatpak_aliases_file}.tmp" <<EOF
+    do if which "${app_alias}" > /dev/null ||
+               grep -q -E "${app_alias}" "${flatpak_aliases_file}.tmp"
+       then printf "Skipping flatpak install of ${app_alias}.\n"
+       else printf "About to install ${app_alias_to_app_ID_array[${app_alias}]}.\n"
+            flatpak install -y flathub "${app_alias_to_app_ID_array[${app_alias}]}"
+            cat >> "${flatpak_aliases_file}.tmp" <<EOF
 alias ${app_alias}='flatpak run ${app_alias_to_app_ID_array[${app_alias}]}'
 EOF
         fi
@@ -126,7 +129,8 @@ EOF
 
     # update bash aliases file, with revised flatpak apps
     cat "${flatpak_aliases_file}.tmp" |
-        __ensure_distinct > "${flatpak_aliases_file}"
+        __ensure_distinct |
+        tee "${flatpak_aliases_file}" > /dev/null
 
     # cleanup tmp file
     rm "${flatpak_aliases_file}.tmp"
