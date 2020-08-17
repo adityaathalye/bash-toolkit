@@ -25,6 +25,7 @@ python3
 python3-pip
 python3-venv
 rlwrap
+silversearcher-ag
 tmux
 vim"
     sudo add-apt-repository universe
