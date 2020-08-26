@@ -168,11 +168,21 @@ __install_to_HOME_bin_and_local_python_things() {
     which virtualenvwrapper.sh || pip3 install virtualenvwrapper
 }
 
+__install_to_HOME_bin_ngrok() {
+    if ! which ngrok > /dev/null
+    then cd "$HOME/Downloads"
+         curl https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -o "./ngrok-stable-linux-amd64.zip"
+         unzip "./ngrok-stable-linux-amd64.zip"
+         mv "./ngrok" "$HOME/bin/ngrok"
+    fi
+}
+
 install_to_HOME_bin() {
     mkdir -p "$HOME/bin"
     __install_to_HOME_bin_youtube_dl
     __install_to_HOME_bin_clojure_things
     __install_to_HOME_bin_and_local_python_things
+    __install_to_HOME_bin_ngrok
 }
 
 #
