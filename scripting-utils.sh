@@ -40,10 +40,11 @@ ensure_deps() {
 ensure_min_bash_version() {
     # Given a 'Major.Minor.Patch' SemVer number, return 1 if the system's
     # bash version is older than the given version. Default to 4.0.0.
-    local semver=($(IFS='.' ; echo $1 ;));
-    ! [[ ${BASH_VERSINFO[0]} -lt ${semver[0]:-4} ||
-             ${BASH_VERSINFO[1]} -lt ${semver[1]:-0} ||
-             ${BASH_VERSINFO[2]} -lt ${semver[2]:-0} ]]
+    # Hat tip: https://unix.stackexchange.com/a/285928
+    local semver="${1:-4.0.0}"
+    local bashver="${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}.${BASH_VERSINFO[2]}"
+
+    [[ $(printf "%s\n" ${semver} ${bashver} | sort -V | head -1) == ${semver} ]]
 }
 
 #
