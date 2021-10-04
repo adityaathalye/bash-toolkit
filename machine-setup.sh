@@ -65,10 +65,19 @@ __dpkg_install_chrome() {
     fi
 }
 
+__snap_install_VSCode() {
+    sudo snap install code --classic
+}
+
 sudo_install_from_walled_gardens() {
     __apt_install_custom_nextdns
     __dpkg_install_chrome
-
+    __snap_install_VSCode
+    # TODO: install docker
+    # TODO: install nvm (node version manager) https://github.com/nvm-sh/nvm#installing-and-updating
+    # TODO: install node with nvm https://github.com/nvm-sh/nvm#usage
+    # TODO: install yarn (package manager for JS)  _WITHOUT_ node https://classic.yarnpkg.com/en/docs/install#debian-stable
+    # TODO: install shadow-cljs if needed https://docs.cider.mx/cider/cljs/shadow-cljs.html
     sudo apt autoremove
     sudo apt autoclean
 }
