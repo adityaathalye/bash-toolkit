@@ -41,6 +41,32 @@ apt_install_standard_packages() {
     done
 }
 
+__apt_install_docker() {
+    # TODO:
+    # 1. install docker from docker's apt repo https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+    # 2. curl-install docker compose to $HOME/bin https://docs.docker.com/compose/install/
+    # 3. also add bash command-completion for docker compose https://docs.docker.com/compose/completion/
+    #
+    if ! which docker docker-engine docker.io containerd runc > /dev/null
+    then sudo apt-get install apt-transport-https \
+              ca-certificates \
+              curl \
+              gnupg-agent \
+              software-properties-common
+
+         curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+             sudo apt-key add -
+
+         if sudo apt-key fingerprint 0EBFCD88
+         then sudo add-apt-repository \
+                   "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+              sudo apt-get-update
+              sudo apt-get install docker-ce docker-ce-cli containerd.io
+         fi
+    fi
+}
+
 __apt_install_custom_nextdns() {
     # https://github.com/nextdns/nextdns/wiki/Debian-Based-Distribution
     if ! which nextdns > /dev/null
