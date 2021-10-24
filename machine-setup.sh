@@ -82,6 +82,31 @@ __apt_install_custom_jami_p2p_videoconf() {
     sudo apt-get update && sudo apt-get install jami
 }
 
+__apt_install_custom_syncthing() {
+    # https://apt.syncthing.net/
+
+    if ! which syncthing > /dev/null
+       then
+           # Add the release PGP keys:
+           sudo curl -s -o /usr/share/keyrings/syncthing-archive-keyring.gpg https://syncthing.net/release-key.gpg
+
+           # Add the "stable" channel to your APT sources:
+           echo "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable" |
+               sudo tee /etc/apt/sources.list.d/syncthing.list
+
+           # Add the "candidate" channel to your APT sources:
+           echo "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing candidate" |
+               sudo tee /etc/apt/sources.list.d/syncthing.list
+
+           # Increase preference of Syncthing's packages ("pinning")
+           printf "Package: *\nPin: origin apt.syncthing.net\nPin-Priority: 990\n" | sudo tee /etc/apt/preferences.d/syncthing
+
+           # Update and install syncthing:
+           sudo apt-get update
+           sudo apt-get install syncthing
+    fi
+}
+
 __dpkg_install_chrome() {
     if ! which google-chrome > /dev/null
     then curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
@@ -97,6 +122,7 @@ __snap_install_VSCode() {
 
 sudo_install_from_walled_gardens() {
     __apt_install_custom_nextdns
+    __apt_install_custom_syncthing
     __dpkg_install_chrome
     __snap_install_VSCode
     # TODO: install docker
