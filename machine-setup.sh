@@ -246,12 +246,32 @@ __install_to_HOME_bin_ngrok() {
     fi
 }
 
+__install_to_HOME_bin_babashka() {
+    # ref: https://raw.githubusercontent.com/babashka/babashka/master/install
+    if ! which bb > /dev/null
+    then
+        local version="$(curl -sL https://raw.githubusercontent.com/babashka/babashka/master/resources/BABASHKA_RELEASED_VERSION)"
+        local tar_file="babashka-${version}-linux-amd64-static.tar.gz"
+        local sha_file="${tar_file}.sha256"
+        local uri_path="https://github.com/babashka/babashka/releases/download/v${version}/"
+         cd "$HOME/Downloads"
+         curl -o "./${tar_file}" -sL "${uri_path}/${tar_file}"
+         curl -o "./${sha_file}" -sL "${uri_path}/${sha_file}"
+
+         printf "%s %s" "$(cat ${sha_file})" ${tar_file} |
+             sha256sum --check --status &&
+             tar -zxf "./${tar_file}" &&
+             mv -f "./bb" "$HOME/bin/bb"
+    fi
+}
+
 install_to_HOME_bin() {
     mkdir -p "$HOME/bin"
     __install_to_HOME_bin_youtube_dl
     __install_to_HOME_bin_clojure_things
     __install_to_HOME_bin_and_local_python_things
     __install_to_HOME_bin_ngrok
+    __install_to_HOME_bin_babashka
 }
 
 #
