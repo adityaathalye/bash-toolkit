@@ -42,28 +42,28 @@ apt_install_standard_packages() {
 }
 
 __apt_install_docker() {
-    # TODO:
-    # 1. install docker from docker's apt repo https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
-    # 2. curl-install docker compose to $HOME/bin https://docs.docker.com/compose/install/
-    # 3. also add bash command-completion for docker compose https://docs.docker.com/compose/completion/
-    #
+    # Installation instructions copied from:
+    # cf. https://docs.docker.com/engine/install/ubuntu/
     if ! which docker docker-engine docker.io containerd runc > /dev/null
-    then sudo apt-get install apt-transport-https \
-              ca-certificates \
-              curl \
-              gnupg-agent \
-              software-properties-common
+    then # Add Docker's official GPG key:
+        sudo apt-get update
+        sudo apt-get install ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-         curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
-             sudo apt-key add -
+        # Add the repository to Apt sources:
+        echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
 
-         if sudo apt-key fingerprint 0EBFCD88
-         then sudo add-apt-repository \
-                   "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        # Install docker
+        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-              sudo apt-get-update
-              sudo apt-get install docker-ce docker-ce-cli containerd.io
-         fi
+        # Check install
+        docker run hello-world
     fi
 }
 
