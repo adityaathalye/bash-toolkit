@@ -27,7 +27,9 @@ In any case, this stuff has emerged from my personal motivations to:
 - learn about bad _and_ successful design
 - go down the winding rabbit pipes of computer history.
 
-See also [oxo](https://github.com/adityaathalye/oxo), a game of Noughts and Crosses, written in Bash.
+See also:
+- [shite](https://github.com/adityaathalye/shite), my little static site generator that makes [my website](https://evalapply.org) (and it also hot-builds and hot-refreshes).
+- [oxo](https://github.com/adityaathalye/oxo), a game of Noughts and Crosses, written in Bash (and it also speaks in computer voice).
 
 # Usage
 
