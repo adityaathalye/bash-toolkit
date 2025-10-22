@@ -160,6 +160,7 @@ flatpak_install_packages() {
         [bitwarden]="com.bitwarden.desktop"
         [bookworm]="com.github.babluboy.bookworm"
         [dropbox]="com.dropbox.Client"
+        [fastmail]="com.fastmail.Fastmail"
         [gimp]="org.gimp.GIMP"
         [inkscape]="org.inkscape.Inkscape"
         [keepassx]="org.keepassxc.KeePassXC"
